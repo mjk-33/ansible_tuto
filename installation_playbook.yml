@@ -6,12 +6,14 @@
 
   pre_tasks:
   - name: install updates (Ubuntu)
+    tags: always
     apt:
       upgrade: dist
       update_cache: yes
     when: ansible_distribution == "Ubuntu"
 
   - name: install updates (CentOS and Red Hat)
+    tags: always
     yum:
       update_only: yes
       update_cache: yes
@@ -24,6 +26,7 @@
 
   tasks:
   - name: Install apache and php for Ubuntu servers
+    tags: apache,php,ubuntu
     apt:
       name:
         - apache2
@@ -33,6 +36,7 @@
     when: ansible_distribution == "Ubuntu"
 
   - name: Install apache and php for CentOS and Red Hat servers
+    tags: apache,php,centos,redhat 
     yum:
       name:
         - httpd
@@ -48,6 +52,7 @@
 
   tasks:
   - name: Install mariaDB for Ubuntu servers
+    tags: mariadb,ubuntu
     apt:
       name:
         - mariadb-server
@@ -56,6 +61,7 @@
     when: ansible_distribution == "Ubuntu"
 
   - name: Install apache and php for CentOS and Red Hat servers
+    tags: mariadb,centos,redhat
     yum:
       name:
         - mariadb
