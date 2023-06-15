@@ -1,2 +1,2 @@
-ubuntu@172.31.33.134
-ubuntu@172.31.42.43
+ubuntu@172.31.33.134 apache_package=apache2 php_package=libapache2-mod-php
+ubuntu@172.31.42.43 apache_package=apache2 php_package=libapache2-mod-php
