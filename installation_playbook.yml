@@ -20,6 +20,25 @@
     when: ansible_distribution in ["CentOS", "Red Hat"]
 
 
+- name: Install packages for [@@@ Ansible Control Host server @@@]
+  hosts: control_host
+  become: true
+  
+  tasks:
+  - name: Install unzip
+    package:
+      name: unzip
+
+  - name: Install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 755
+      owner: root
+      group: root
+
+
 - name: Install required packages for [@@@ Web servers @@@]
   hosts: web_servers
   become: true
