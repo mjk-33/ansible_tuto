@@ -1,0 +1,64 @@
+---
+
+- name: Install required updates for [@@@ all servers @@@]
+  hosts: all
+  become: true
+
+  pre_tasks:
+  - name: install updates (Ubuntu)
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install updates (CentOS and Red Hat)
+    yum:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+
+- name: Install required packages for [@@@ Web servers @@@]
+  hosts: web_servers
+  become: true
+
+  tasks:
+  - name: Install apache and php for Ubuntu servers
+    apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install apache and php for CentOS and Red Hat servers
+    yum:
+      name:
+        - httpd
+        - php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+
+- name: Install required packages for [@@@ DB servers @@@]
+  hosts: db_servers
+  become: true
+
+  tasks:
+  - name: Install mariaDB for Ubuntu servers
+    apt:
+      name:
+        - mariadb-server
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install apache and php for CentOS and Red Hat servers
+    yum:
+      name:
+        - mariadb
+      state: latest
+      update_cache: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
