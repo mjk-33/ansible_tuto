@@ -1,18 +1,24 @@
 ---
 
-- hosts: all
+- name: Install required for basic tasks packages for all instances
+  hosts: all
   become: true
-  tasks:
-  - name: update repository index
-    apt:
-      update_cache: yes
-  
-  - name: installing apache package
-    apt:
-      name: apache2
-      state: latest
 
-  - name: php support for apache
+  tasks:
+  - name: installing apache and php package for Ubuntu
     apt:
-      name: libapache2-mod-php
-      state: latest    
+      name: 
+        - apache2
+        - libapache2-mod-php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: installing apache and php package for CentOS and Red Hat
+    yum:
+      name: 
+        - httpd
+        - php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
