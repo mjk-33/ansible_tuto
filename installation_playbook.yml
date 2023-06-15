@@ -35,6 +35,15 @@
       update_cache: yes
     when: ansible_distribution == "Ubuntu"
 
+  - name: Copy main.py file
+    tags: apache,php,ubuntu,python
+    copy:
+      src: main.py
+      dest: /usr/bin/python3
+      owner: root
+      group: root
+      mode: 755
+  
   - name: Install apache and php for CentOS and Red Hat servers
     tags: apache,php,centos,redhat 
     yum:
