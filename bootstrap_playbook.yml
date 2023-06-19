@@ -1,0 +1,49 @@
+---
+
+- name: Install required updates for [@@@ all servers @@@]
+  hosts: all
+  become: true
+
+  pre_tasks:
+  - name: install updates (Ubuntu)
+    tags: always
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install updates (CentOS and Red Hat)
+    tags: always
+    yum:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+
+- name: Adding users [@@@ all servers @@@]
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Creating user Simon
+    tags: always
+    user:
+      name: simon
+      groups: root
+    
+  - name: Adding ssh key for user Simon
+    tags: always
+    authorized_key:
+      user: simon
+      key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE7VFwTAptr+gUq1yahP1URMfkBAuK2tw3xnoQWo8YO2 "ansible"'
+
+  - name: Add sudoers file for Simon
+    tags: always
+    copy:
+      src: sudoer_simon      
+      dest: /etc/sudoers.d/simon
+      owner: root
+      group: root
+      mode: 440
+
+

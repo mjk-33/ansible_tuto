@@ -8,36 +8,28 @@
   - name: install updates (Ubuntu)
     tags: always
     apt:
-      upgrade: dist
       update_cache: yes
+    changed_when: false
     when: ansible_distribution == "Ubuntu"
 
   - name: install updates (CentOS and Red Hat)
     tags: always
     yum:
-      update_only: yes
       update_cache: yes
+    changed_when: false
     when: ansible_distribution in ["CentOS", "Red Hat"]
 
 
-- name: Install packages for [@@@ Ansible Control Host server @@@]
-  hosts: control_host
+- name: Adding users [@@@ all servers @@@]
+  hosts: all
   become: true
-  
-  tasks:
-  - name: Install unzip
-    package:
-      name: unzip
 
-  - name: Install terraform
-    unarchive:
-      src: https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
-      dest: /usr/local/bin
-      remote_src: yes
-      mode: 755
-      owner: root
-      group: root
-
+  tasks:   
+  - name: Adding ssh key for user Simon
+    tags: always
+    authorized_key:
+      user: simon
+      key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE7VFwTAptr+gUq1yahP1URMfkBAuK2tw3xnoQWo8YO2 "ansible"'
 
 - name: Install required packages for [@@@ Web servers @@@]
   hosts: web_servers
@@ -54,15 +46,31 @@
       update_cache: yes
     when: ansible_distribution == "Ubuntu"
 
-  - name: Copy main.py file
-    tags: apache,php,ubuntu,python
-    copy:
-      src: main.py
-      dest: /usr/bin/python3
-      owner: root
-      group: root
-      mode: 755
-  
+  - name: start httpd on CentOS and Red Hat
+    tags: apache,centos,redhat
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+
+  - name: change email address for admin on Ubuntu server
+    tags: apache, httpd
+    lineinfile:
+      path: /etc/apache2/sites-available/000-default.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin testemail@test.com
+    when: ansible_distribution == "Ubuntu"
+    register: apache2
+
+  - name: Restart apache on Ubuntu servers
+    tags: httpd,apache,ubuntu
+    service:
+      name: apache2
+      state: restarted
+    when: apache2.changed
+ 
   - name: Install apache and php for CentOS and Red Hat servers
     tags: apache,php,centos,redhat 
     yum:
@@ -73,7 +81,30 @@
       update_cache: yes
     when: ansible_distribution in ["CentOS", "Red Hat"]
 
+  - name: start httpd on CentOS and Red Hat
+    tags: apache,centos,redhat
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
 
+  - name: Change email address for admin
+    tags: apache,httpd,redhat
+    lineinfile:
+      path: /etc/http/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin test123@test.com
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+    register: httpd
+
+  - name: Restart httpd on CentOS and Red Hat
+    tags: httpd,apache,centos,redhat
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+  
 - name: Install required packages for [@@@ DB servers @@@]
   hosts: db_servers
   become: true
