@@ -1,0 +1,50 @@
+- name: install httpd package (CentOS, Red Hat)
+  tags: apache,centos,httpd
+  yum:
+    name:
+      - httpd
+      - php
+    state: latest
+  when: ansible_distribution == ["Red Hat", "CentOS"]
+ 
+- name: start and enable httpd (CentOS, Red Hat)
+  tags: apache,centos,httpd
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+  when: ansible_distribution in ["CentOS", "Red Hat"]
+ 
+- name: install apache2 package (Ubuntu)
+  tags: apache,apache2,ubuntu
+  apt:
+    name:
+      - apache2
+      - libapache2-mod-php
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+ 
+- name: change e-mail address for admin
+  tags: apache,centos,httpd
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^ServerAdmin'
+    line: ServerAdmin somebody@somewhere.net
+  when: ansible_distribution in ["Red Hat", "CentOS"]
+  register: httpd
+ 
+- name: restart httpd (CentOS, Red Hat)
+  tags: apache,centos,httpd
+  service:
+    name: httpd
+    state: restarted
+  when: httpd.changed    
+ 
+- name: copy html file for site
+  tags: apache,apache,apache2,httpd
+  copy:
+    src: main.py
+    dest: /var/www/html/
+    owner: root
+    group: root
+    mode: 0644
