@@ -1,0 +1,129 @@
+---
+
+- name: Install required updates for [@@@ all servers @@@]
+  hosts: all
+  become: true
+
+  pre_tasks:
+  - name: install updates (Ubuntu)
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install updates (CentOS and Red Hat)
+    tags: always
+    yum:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+
+- name: Adding users [@@@ all servers @@@]
+  hosts: all
+  become: true
+
+  tasks:   
+  - name: Adding ssh key for user Simon
+    tags: always
+    authorized_key:
+      user: simon
+      key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE7VFwTAptr+gUq1yahP1URMfkBAuK2tw3xnoQWo8YO2 "ansible"'
+
+- name: Install required packages for [@@@ Web servers @@@]
+  hosts: web_servers
+  become: true
+
+  tasks:
+  - name: Install apache and php for Ubuntu servers
+    tags: apache,php,ubuntu
+    apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: start httpd on CentOS and Red Hat
+    tags: apache,centos,redhat
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+
+  - name: change email address for admin on Ubuntu server
+    tags: apache, httpd
+    lineinfile:
+      path: /etc/apache2/sites-available/000-default.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin testemail@test.com
+    when: ansible_distribution == "Ubuntu"
+    register: apache2
+
+  - name: Restart apache on Ubuntu servers
+    tags: httpd,apache,ubuntu
+    service:
+      name: apache2
+      state: restarted
+    when: apache2.changed
+ 
+  - name: Install apache and php for CentOS and Red Hat servers
+    tags: apache,php,centos,redhat 
+    yum:
+      name:
+        - httpd
+        - php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+  - name: start httpd on CentOS and Red Hat
+    tags: apache,centos,redhat
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+
+  - name: Change email address for admin
+    tags: apache,httpd,redhat
+    lineinfile:
+      path: /etc/http/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin test123@test.com
+    when: ansible_distribution in ["CentOS", "Red Hat"]
+    register: httpd
+
+  - name: Restart httpd on CentOS and Red Hat
+    tags: httpd,apache,centos,redhat
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+  
+- name: Install required packages for [@@@ DB servers @@@]
+  hosts: db_servers
+  become: true
+
+  tasks:
+  - name: Install mariaDB for Ubuntu servers
+    tags: mariadb,ubuntu
+    apt:
+      name:
+        - mariadb-server
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install apache and php for CentOS and Red Hat servers
+    tags: mariadb,centos,redhat
+    yum:
+      name:
+        - mariadb
+      state: latest
+      update_cache: yes
+    when: ansible_distribution in ["CentOS", "Red Hat"]
